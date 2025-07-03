@@ -251,7 +251,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
-          - name: REDIS_PASSWORD
+          - name: REDIS_PASSWORD_test
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisPasswordSecretRef" . | nindent 16 }}
