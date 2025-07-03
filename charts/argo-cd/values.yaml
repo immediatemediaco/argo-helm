@@ -1989,12 +1989,7 @@ server:
   extraArgs: []
 
   # -- Environment variables to pass to Argo CD server
-  env:
-    - name: REDIS_TEST_PASSWORD
-      value: ""
-    - name: REDIS_PASSWORD_FILE
-      value: /mnt/secrets/redis-password/_k8s_argocd_redis_password
-    
+  env: []
 
   # -- envFrom to pass to Argo CD server
   # @default -- `[]` (See [values.yaml])
