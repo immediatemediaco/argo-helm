@@ -1979,7 +1979,8 @@ server:
   args:
     - -c
     - |
-        export REDIS_TEST_PASSWORD=$(cat $REDIS_PASSWORD_FILE) &&
+        REDIS_TEST_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password) && \
+        env REDIS_TEST_PASSWORD=$REDIS_TEST_PASSWORD \
         exec /usr/local/bin/argocd-server \
           --port=8080 \
           --metrics-port=8083
@@ -1988,12 +1989,7 @@ server:
   extraArgs: []
 
   # -- Environment variables to pass to Argo CD server
-  env:
-    - name: REDIS_TEST_PASSWORD
-      value: ""
-    - name: REDIS_PASSWORD_FILE
-      value: /mnt/secrets/redis-password/_k8s_argocd_redis_password
-    
+  env: []
 
   # -- envFrom to pass to Argo CD server
   # @default -- `[]` (See [values.yaml])
