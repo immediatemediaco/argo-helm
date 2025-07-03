@@ -1979,7 +1979,7 @@ server:
   args:
     - -c
     - |
-        REDIS_TEST_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password) && \
+        REDIS_TEST_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password)
         export REDIS_TEST_PASSWORD \
         exec /usr/local/bin/argocd-server \
           --port=8080 \
