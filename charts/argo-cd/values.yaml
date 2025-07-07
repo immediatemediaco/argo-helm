@@ -1427,7 +1427,7 @@ redis:
   ## Redis image
   image:
     # -- Redis repository
-    repository: ecr-public.aws.com/docker/library/redis
+    repository: redis #needs replacing with a proper redis image
     # -- Redis tag
     ## Do not upgrade to >= 7.4.0, otherwise you are no longer using an open source version of Redis
     tag: 7.2.8-alpine
