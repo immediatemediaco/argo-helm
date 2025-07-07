@@ -1989,7 +1989,7 @@ server:
   args:
     - -c
     - |
-        REDIS_PASSWORD="testing123"
+        REDIS_PASSWORD=""
         exec /usr/local/bin/argocd-server --port=8080 --metrics-port=8083;
 
   # -- Additional command line arguments to pass to Argo CD server
