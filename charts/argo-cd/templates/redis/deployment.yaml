@@ -66,7 +66,7 @@ spec:
         command:
         - sh
         - -c
-        - - /health/redis_entrypoint.sh
+        - /health/redis_entrypoint.sh
         {{- with (concat .Values.global.env .Values.redis.env) }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
