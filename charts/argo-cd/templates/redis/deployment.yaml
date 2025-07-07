@@ -57,7 +57,7 @@ spec:
       {{- if .Values.redis.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.redis.terminationGracePeriodSeconds }}
       {{- end }}
-      serviceAccountName: {{ include "argo-cd.redis.serviceAccountName" . }}
+      serviceAccountName: argocd-server #needs to rearraged once the test is successful
       automountServiceAccountToken: {{ .Values.redis.automountServiceAccountToken }}
       containers:
       - name: {{ .Values.redis.name }}
