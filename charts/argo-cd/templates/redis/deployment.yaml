@@ -69,11 +69,11 @@ spec:
           - -c
           - |
             REDIS_PASSWORD_1=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password | tr -d '\n') && \
-            echo "Launching: exec redis-server --save \"\" --appendonly no --requirepass \"$REDIS_PASSWORD_1\"" && \
+            echo "Launching: exec redis-server --save \"\" --appendonly no --requirepass \"$REDIS_PASSWORD\"" && \
             exec redis-server \
               --save "" \
               --appendonly no \
-              --requirepass "$REDIS_PASSWORD_1" 
+              --requirepass "$REDIS_PASSWORD" 
         env:
         {{- with (concat .Values.global.env .Values.redis.env) }}
           {{- toYaml . | nindent 8 }}

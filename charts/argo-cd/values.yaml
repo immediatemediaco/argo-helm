@@ -1770,7 +1770,7 @@ redis-ha:
       readOnlyRootFilesystem: true
 
   # -- Configures redis-ha with AUTH
-  auth: true
+  auth: false
   # -- Existing Secret to use for redis-ha authentication.
   # By default the redis-secret-init Job is generating this Secret.
   existingSecret: argocd-redis
@@ -1979,8 +1979,8 @@ server:
   args:
     - -c
     - |
-        REDIS_TEST_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password) && \
-        export REDIS_TEST_PASSWORD \
+        REDIS_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password) && \
+        export REDIS_PASSWORD \
         exec /usr/local/bin/argocd-server \
           --port=8080 \
           --metrics-port=8083
