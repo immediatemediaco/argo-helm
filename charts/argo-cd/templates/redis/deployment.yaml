@@ -57,23 +57,24 @@ spec:
       {{- if .Values.redis.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.redis.terminationGracePeriodSeconds }}
       {{- end }}
-      serviceAccountName: argocd-server #needs to rearraged once the test is successful
+      serviceAccountName: {{ include "argo-cd.redis.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.redis.automountServiceAccountToken }}
       containers:
       - name: {{ .Values.redis.name }}
         image: {{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}
         imagePullPolicy: {{ default .Values.global.image.imagePullPolicy .Values.redis.image.imagePullPolicy }}
-        #needs to rearraged once the test is successful
-        command:
-          - /bin/sh
-          - -c
-          - |
-            REDIS_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password | tr -d '\n') && \
-            exec redis-server \
-              --save "" \
-              --appendonly no \
-              --requirepass "$REDIS_PASSWORD" 
+        args:
+        {{- with .Values.redis.extraArgs }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - --save
+        - ""
+        - --appendonly
+        - "no"
+        - --requirepass $(REDIS_PASSWORD)
         env:
+        - name: REDIS_PASSWORD
+          value: "testing123"
         {{- with (concat .Values.global.env .Values.redis.env) }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -120,9 +121,6 @@ spec:
         volumeMounts:
           - mountPath: /health
             name: health
-          - name: argocd-redis-password
-            mountPath: /mnt/secrets/redis-password
-            readOnly: true
         {{- with .Values.redis.volumeMounts }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -211,15 +209,9 @@ spec:
           configMap:
             name: {{ include "argo-cd.redis.fullname" . }}-health-configmap
             defaultMode: 493
-        - name: argocd-redis-password
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: "argocd-redis-password"
-        {{- with .Values.redis.volumes }}
-          {{- toYaml . | nindent 8}}
-        {{- end }}
+      {{- with .Values.redis.volumes }}
+        {{- toYaml . | nindent 8}}
+      {{- end }}
       {{- with .Values.redis.dnsConfig }}
       dnsConfig:
         {{- toYaml . | nindent 8 }}
