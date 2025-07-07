@@ -69,6 +69,7 @@ spec:
           - -c
           - |
             REDIS_PASSWORD_1=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password | tr -d '\n') && \
+            echo "Launching Redis with password: '$REDIS_PASSWORD_1'" && \
             exec redis-server \
               --save "" \
               --appendonly no \
