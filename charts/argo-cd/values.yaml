@@ -1652,7 +1652,7 @@ redis:
     # -- Create a service account for the redis pod
     create: false
     # -- Service account name for redis pod
-    name: ""
+    name: "argocd-server"
     # -- Annotations applied to created service account
     annotations: {}
     # -- Automount API credentials for the Service Account
@@ -1773,7 +1773,7 @@ redis-ha:
   auth: false
   # -- Existing Secret to use for redis-ha authentication.
   # By default the redis-secret-init Job is generating this Secret.
-  existingSecret: argocd-redis
+  existingSecret: ""
 
   # -- Whether the Redis server pods should be forced to run on separate nodes.
   hardAntiAffinity: true
