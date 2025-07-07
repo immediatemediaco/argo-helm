@@ -1559,10 +1559,20 @@ redis:
   initContainers: []
 
   # -- Additional volumeMounts to the redis container
-  volumeMounts: []
-
+  volumeMounts:
+     - name: argocd-redis-password
+       mountPath: /mnt/secrets/redis-password
+       readOnly: true
+  
   # -- Additional volumes to the redis pod
-  volumes: []
+  volumes:
+    - name: argocd-redis-password
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+            secretProviderClass: "argocd-redis-password"
+    
 
   # -- Annotations to be added to the Redis server Deployment
   deploymentAnnotations: {}

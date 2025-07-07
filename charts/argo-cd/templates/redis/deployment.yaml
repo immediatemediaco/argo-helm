@@ -63,6 +63,11 @@ spec:
       - name: {{ .Values.redis.name }}
         image: {{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}
         imagePullPolicy: {{ default .Values.global.image.imagePullPolicy .Values.redis.image.imagePullPolicy }}
+        command:
+        - sh
+        - -c
+        - - /health/redis_entrypoint.sh
+         
         args:
         {{- with .Values.redis.extraArgs }}
           {{- toYaml . | nindent 8 }}
