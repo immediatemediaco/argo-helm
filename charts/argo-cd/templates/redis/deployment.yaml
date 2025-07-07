@@ -67,6 +67,7 @@ spec:
         - sh
         - -c
         - /health/redis_entrypoint.sh
+        env:
         {{- with (concat .Values.global.env .Values.redis.env) }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
