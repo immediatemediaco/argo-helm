@@ -1978,12 +1978,11 @@ server:
     - /bin/sh
   args:
     - -c
-    - |
-        REDIS_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password) && \
-        export REDIS_PASSWORD \
-        exec /usr/local/bin/argocd-server \
-          --port=8080 \
-          --metrics-port=8083
+    - >
+        REDIS_PASSWORD_test=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password);
+        echo "REDIS_TEST_PASSWORD is: $REDIS_PASSWORD_test";
+        export REDIS_PASSWORD_test;
+        exec /usr/local/bin/argocd-server --port=8080 --metrics-port=8083;
 
   # -- Additional command line arguments to pass to Argo CD server
   extraArgs: []
