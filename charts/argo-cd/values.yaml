@@ -1990,11 +1990,13 @@ server:
     - -c
     - |
 
-        if [ -n "$REDIS_PASSWORD"]; then
+        if [ -n "$REDIS_PASSWORD" ]; then
           unset REDIS_PASSWORD;
         else
-          REDIS_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password)
+          REDIS_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password | tr -d '\n')
         fi
+
+        export REDIS_PASSWORD
         exec /usr/local/bin/argocd-server --port=8080 --metrics-port=8083;
 
   # -- Additional command line arguments to pass to Argo CD server
