@@ -42,7 +42,7 @@ data:
     if [ -n "$REDIS_PASSWORD" ]; then
       PASSWORD="$REDIS_PASSWORD"
     elif [ -f /mnt/secrets/redis-password/_k8s_argocd_redis_password ]; then
-      PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password | tr -d '\r\n')
+      PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password)
     else
       echo "[ERROR] Redis password not found!"
       exit 1
