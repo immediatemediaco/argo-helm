@@ -91,6 +91,8 @@ spec:
                 name: argocd-cmd-params-cm
                 key: server.insecure
                 optional: true
+          - name: TEST_VAR
+            value: /mnt/secrets/redis-password/_k8s_argocd_redis_password
           - name: ARGOCD_SERVER_BASEHREF
             valueFrom:
               configMapKeyRef:
