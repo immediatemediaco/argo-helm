@@ -35,6 +35,7 @@ rules:
   - ""
   resources:
   - configmaps
+  - namespaces
   verbs:
   - get
   - watch
@@ -60,6 +61,7 @@ rules:
   - workflows/finalizers
   - workflowtasksets
   - workflowtasksets/finalizers
+  - workflowtasksets/status
   - workflowartifactgctasks
   verbs:
   - get
