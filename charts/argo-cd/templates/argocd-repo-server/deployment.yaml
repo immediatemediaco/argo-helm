@@ -1,3 +1,5 @@
+{{- $redisAuth := .Values.redis.auth | default dict -}}
+{{- $inlineRedisPassword := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) $redisAuth.password -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -189,9 +191,13 @@ spec:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
           - name: REDIS_PASSWORD
+            {{- if $inlineRedisPassword }}
+            value: {{ $redisAuth.password | quote }}
+            {{- else }}
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisPasswordSecretRef" . | nindent 16 }}
+            {{- end }}
           - name: REDIS_SENTINEL_USERNAME
             valueFrom:
               secretKeyRef:

@@ -1,4 +1,6 @@
 {{- $redisHa := index .Values "redis-ha" -}}
+{{- $auth := .Values.redis.auth | default dict -}}
+{{- $inlineRedisPassword := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) $auth.password -}}
 {{- if and .Values.redis.enabled (not $redisHa.enabled) -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -71,6 +73,10 @@ spec:
         {{- with (concat .Values.global.env .Values.redis.env) }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if $inlineRedisPassword }}
+        - name: REDIS_PASSWORD
+          value: {{ $auth.password | quote }}
+        {{- end }}
         {{- with .Values.redis.envFrom }}
         envFrom:
           {{- toYaml . | nindent 8 }}
@@ -127,10 +133,13 @@ spec:
         - name: REDIS_EXPORTER_WEB_LISTEN_ADDRESS
           value: {{ printf "0.0.0.0:%v" .Values.redis.containerPorts.metrics }}
         - name: REDIS_PASSWORD
+          {{- if $inlineRedisPassword }}
+          value: {{ $auth.password | quote }}
+          {{- else }}
           valueFrom:
             secretKeyRef:
-              name: argocd-redis
-              key: auth
+              {{- include "argo-cd.redisPasswordSecretRef" . | nindent 14 }}
+          {{- end }}
         {{- with (concat .Values.global.env .Values.redis.exporter.env) }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
