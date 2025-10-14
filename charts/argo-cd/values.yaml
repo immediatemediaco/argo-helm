@@ -2071,11 +2071,16 @@ server:
   # @default -- `[]` (defaults to global.imagePullSecrets)
   imagePullSecrets: []
 
-  # -- Path to the Argo CD server binary executed in the main container
-  binaryPath: /usr/local/bin/argocd-server
-
   # -- Additional command line arguments to pass to Argo CD server
   extraArgs: []
+
+  # -- Override the container command for the Argo CD server
+  command: []
+
+  passwordFromFile:
+    # -- Command list used when `redis.passwordFromFile.enabled` is true.
+    #    Provide your own wrapper via chart overrides.
+    command: []
 
   # -- Environment variables to pass to Argo CD server
   env: []

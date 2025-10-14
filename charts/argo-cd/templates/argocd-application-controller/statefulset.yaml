@@ -1,8 +1,4 @@
-{{- $passwordFromFile := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) .Values.redis.passwordFromFile.enabled -}}
-{{- $controllerCommand := default (list) .Values.controller.command -}}
-{{- if $passwordFromFile }}
-  {{- $controllerCommand = required "controller.passwordFromFile.command must be set when redis.passwordFromFile.enabled is true" .Values.controller.passwordFromFile.command -}}
-{{- end }}
+{{- $controllerCommand := required "controller.passwordFromFile.command must be set" .Values.controller.passwordFromFile.command -}}
 {{- $hasControllerCommand := gt (len $controllerCommand) 0 }}
 {{- if not .Values.controller.dynamicClusterDistribution | default false }}
 apiVersion: apps/v1
@@ -75,9 +71,7 @@ spec:
 {{ tpl (toYaml $controllerCommand) . | nindent 8 }}
         {{- end }}
         args:
-        {{- if not $hasControllerCommand }}
         - /usr/local/bin/argocd-application-controller
-        {{- end }}
         - --metrics-port={{ .Values.controller.containerPorts.metrics }}
         {{- if .Values.controller.metrics.applicationLabels.enabled }}
         {{- range .Values.controller.metrics.applicationLabels.labels }}
@@ -250,10 +244,8 @@ spec:
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
-          {{- if $passwordFromFile }}
           - name: REDIS_PASSWORD_FILE
             value: {{ tpl .Values.redis.passwordFromFile.path . | quote }}
-          {{- end }}
           - name: REDIS_SENTINEL_USERNAME
             valueFrom:
               secretKeyRef:

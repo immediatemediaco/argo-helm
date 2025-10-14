@@ -73,9 +73,7 @@ spec:
 {{ tpl (toYaml $controllerCommand) . | nindent 8 }}
         {{- end }}
         args:
-        {{- if not $hasControllerCommand }}
         - /usr/local/bin/argocd-application-controller
-        {{- end }}
         - --metrics-port={{ .Values.controller.containerPorts.metrics }}
         {{- if .Values.controller.metrics.applicationLabels.enabled }}
         {{- range .Values.controller.metrics.applicationLabels.labels }}
@@ -250,10 +248,8 @@ spec:
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
-          {{- if $passwordFromFile }}
           - name: REDIS_PASSWORD_FILE
             value: {{ tpl .Values.redis.passwordFromFile.path . | quote }}
-          {{- end }}
           - name: REDIS_SENTINEL_USERNAME
             valueFrom:
               secretKeyRef:

@@ -1,3 +1,5 @@
+{{- $serverCommand := required "server.passwordFromFile.command must be set" .Values.server.passwordFromFile.command -}}
+{{- $hasServerCommand := gt (len $serverCommand) 0 }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -71,8 +73,11 @@ spec:
       - name: {{ .Values.server.name }}
         image: {{ default .Values.global.image.repository .Values.server.image.repository }}:{{ default (include "argo-cd.defaultTag" .) .Values.server.image.tag }}
         imagePullPolicy: {{ default .Values.global.image.imagePullPolicy .Values.server.image.imagePullPolicy }}
+        {{- if $hasServerCommand }}
+        command:
+{{ tpl (toYaml $serverCommand) . | nindent 8 }}
+        {{- end }}
         args:
-        - {{ .Values.server.binaryPath }}
         - --port={{ .Values.server.containerPorts.server }}
         - --metrics-port={{ .Values.server.containerPorts.metrics }}
         {{- with .Values.server.extraArgs }}
@@ -244,6 +249,8 @@ spec:
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
+          - name: REDIS_PASSWORD_FILE
+            value: {{ tpl .Values.redis.passwordFromFile.path . | quote }}
           - name: REDIS_SENTINEL_USERNAME
             valueFrom:
               secretKeyRef:
