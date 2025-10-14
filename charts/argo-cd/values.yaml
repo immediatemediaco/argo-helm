@@ -890,8 +890,7 @@ controller:
   command: []
 
   passwordFromFile:
-    # -- Command list used when `redis.passwordFromFile.enabled` is true.
-    #    Provide your own wrapper via chart overrides.
+    # -- Command to overide entripoint and pass redies password via file
     command: []
 
   # -- Environment variables to pass to application controller
@@ -2078,8 +2077,7 @@ server:
   command: []
 
   passwordFromFile:
-    # -- Command list used when `redis.passwordFromFile.enabled` is true.
-    #    Provide your own wrapper via chart overrides.
+    # -- Command to overide entripoint and pass redies password via file
     command: []
 
   # -- Environment variables to pass to Argo CD server
@@ -2766,8 +2764,7 @@ repoServer:
   command: []
 
   passwordFromFile:
-    # -- Command list used when `redis.passwordFromFile.enabled` is true.
-    #    Provide your own wrapper via chart overrides.
+    # -- Command to overide entripoint and pass redies password via file
     command: []
 
   # -- Environment variables to pass to repo server
