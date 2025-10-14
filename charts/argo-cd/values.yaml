@@ -886,6 +886,14 @@ controller:
   # -- Additional command line arguments to pass to application controller
   extraArgs: []
 
+  # -- Override the container command for the application controller
+  command: []
+
+  passwordFromFile:
+    # -- Command list used when `redis.passwordFromFile.enabled` is true.
+    #    Provide your own wrapper via chart overrides.
+    command: []
+
   # -- Environment variables to pass to application controller
   env: []
 
@@ -1572,9 +1580,11 @@ redis:
   # @default -- `[]` (defaults to global.imagePullSecrets)
   imagePullSecrets: []
 
-  auth:
-    # -- Plaintext password injected directly into the in-cluster Redis deployment and Argo CD components
-    password: ""
+  passwordFromFile:
+    # -- Require the Redis password to be read from a file (for example, mounted via CSI)
+    enabled: true
+    # -- Absolute path to the file that contains the Redis password
+    path: /mnt/secrets/redis-password/_k8s_argocd_redis_password
 
   # -- Additional command line arguments to pass to redis-server
   extraArgs: []
@@ -2746,6 +2756,14 @@ repoServer:
 
   # -- Additional command line arguments to pass to repo server
   extraArgs: []
+
+  # -- Override the container command for the repo server
+  command: []
+
+  passwordFromFile:
+    # -- Command list used when `redis.passwordFromFile.enabled` is true.
+    #    Provide your own wrapper via chart overrides.
+    command: []
 
   # -- Environment variables to pass to repo server
   env: []

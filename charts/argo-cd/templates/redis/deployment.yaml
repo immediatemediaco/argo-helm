@@ -1,6 +1,5 @@
 {{- $redisHa := index .Values "redis-ha" -}}
-{{- $auth := .Values.redis.auth | default dict -}}
-{{- $inlineRedisPassword := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) $auth.password -}}
+{{- $passwordFromFile := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) .Values.redis.passwordFromFile.enabled -}}
 {{- if and .Values.redis.enabled (not $redisHa.enabled) -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -73,9 +72,9 @@ spec:
         {{- with (concat .Values.global.env .Values.redis.env) }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if $inlineRedisPassword }}
-        - name: REDIS_PASSWORD
-          value: {{ required "values.redis.auth.password must be set when redis.auth.password is used inline" $auth.password | quote }}
+        {{- if $passwordFromFile }}
+        - name: REDIS_PASSWORD_FILE
+          value: {{ tpl .Values.redis.passwordFromFile.path . | quote }}
         {{- end }}
         {{- with .Values.redis.envFrom }}
         envFrom:
@@ -132,9 +131,9 @@ spec:
           value: {{ printf "redis://localhost:%v" .Values.redis.containerPorts.redis }}
         - name: REDIS_EXPORTER_WEB_LISTEN_ADDRESS
           value: {{ printf "0.0.0.0:%v" .Values.redis.containerPorts.metrics }}
-        {{- if $inlineRedisPassword }}
-        - name: REDIS_PASSWORD
-          value: {{ required "values.redis.auth.password must be set when redis.auth.password is used inline" $auth.password | quote }}
+        {{- if $passwordFromFile }}
+        - name: REDIS_PASSWORD_FILE
+          value: {{ tpl .Values.redis.passwordFromFile.path . | quote }}
         {{- end }}
         {{- with (concat .Values.global.env .Values.redis.exporter.env) }}
           {{- toYaml . | nindent 8 }}

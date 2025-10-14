@@ -1,5 +1,9 @@
-{{- $redisAuth := .Values.redis.auth | default dict -}}
-{{- $inlineRedisPassword := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) $redisAuth.password -}}
+{{- $passwordFromFile := and (not .Values.externalRedis.host) (not .Values.redisSecretInit.enabled) .Values.redis.passwordFromFile.enabled -}}
+{{- $repoCommand := default (list) .Values.repoServer.command -}}
+{{- if $passwordFromFile }}
+  {{- $repoCommand = required "repoServer.passwordFromFile.command must be set when redis.passwordFromFile.enabled is true" .Values.repoServer.passwordFromFile.command -}}
+{{- end }}
+{{- $hasRepoCommand := gt (len $repoCommand) 0 }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -79,8 +83,14 @@ spec:
       - name: {{ .Values.repoServer.name }}
         image: {{ default .Values.global.image.repository .Values.repoServer.image.repository }}:{{ default (include "argo-cd.defaultTag" .) .Values.repoServer.image.tag }}
         imagePullPolicy: {{ default .Values.global.image.imagePullPolicy .Values.repoServer.image.imagePullPolicy }}
+        {{- if $hasRepoCommand }}
+        command:
+{{ tpl (toYaml $repoCommand) . | nindent 8 }}
+        {{- end }}
         args:
+        {{- if not $hasRepoCommand }}
         - /usr/local/bin/argocd-repo-server
+        {{- end }}
         - --port={{ .Values.repoServer.containerPorts.server }}
         - --metrics-port={{ .Values.repoServer.containerPorts.metrics }}
         {{- with .Values.repoServer.extraArgs }}
@@ -190,9 +200,9 @@ spec:
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
-          {{- if $inlineRedisPassword }}
-          - name: REDIS_PASSWORD
-            value: {{ required "values.redis.auth.password must be set when redis.auth.password is used inline" $redisAuth.password | quote }}
+          {{- if $passwordFromFile }}
+          - name: REDIS_PASSWORD_FILE
+            value: {{ tpl .Values.redis.passwordFromFile.path . | quote }}
           {{- end }}
           - name: REDIS_SENTINEL_USERNAME
             valueFrom:
