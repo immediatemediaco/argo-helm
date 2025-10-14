@@ -190,14 +190,10 @@ spec:
             valueFrom:
               secretKeyRef:
                 {{- include "argo-cd.redisUsernameSecretRef" . | nindent 16 }}
+          {{- if $inlineRedisPassword }}
           - name: REDIS_PASSWORD
-            {{- if $inlineRedisPassword }}
-            value: {{ $redisAuth.password | quote }}
-            {{- else }}
-            valueFrom:
-              secretKeyRef:
-                {{- include "argo-cd.redisPasswordSecretRef" . | nindent 16 }}
-            {{- end }}
+            value: {{ required "values.redis.auth.password must be set when redis.auth.password is used inline" $redisAuth.password | quote }}
+          {{- end }}
           - name: REDIS_SENTINEL_USERNAME
             valueFrom:
               secretKeyRef:
