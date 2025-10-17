@@ -3080,7 +3080,7 @@ repoServer:
     # -- Create repo server service account
     create: true
     # -- Repo server service account name
-    name: "argocd-repo-server" # "d-argocrepo-server"
+    name: "argocd-repo-server"
     # -- Annotations applied to created service account
     annotations: {}
     # -- Labels applied to created service account
