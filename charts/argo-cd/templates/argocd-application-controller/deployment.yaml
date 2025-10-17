@@ -1,8 +1,4 @@
-{{- $passwordFile := tpl .Values.redis.passwordFromFile.path . -}}
-{{- $controllerCommand := .Values.controller.passwordFromFile.command -}}
-{{- if not $controllerCommand }}
-  {{- $controllerCommand = list "sh" "-c" (printf "PASSWORD_FILE=\"%s\"\nif [ ! -f \"$PASSWORD_FILE\" ]; then\n  echo \"Redis password file $PASSWORD_FILE not found\" >&2\n  exit 1\nfi\nexport REDIS_PASSWORD=\"$(cat \"$PASSWORD_FILE\")\"\nexec \"$@\"" $passwordFile) "/usr/local/bin/argocd-application-controller" -}}
-{{- end }}
+{{- $controllerCommand := required "controller.passwordFromFile.command must be set" .Values.controller.passwordFromFile.command -}}
 {{- $hasControllerCommand := gt (len $controllerCommand) 0 }}
 {{- if .Values.controller.dynamicClusterDistribution }}
 apiVersion: apps/v1

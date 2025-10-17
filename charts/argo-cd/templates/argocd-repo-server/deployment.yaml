@@ -1,8 +1,4 @@
-{{- $passwordFile := tpl .Values.redis.passwordFromFile.path . -}}
-{{- $repoCommand := .Values.repoServer.passwordFromFile.command -}}
-{{- if not $repoCommand }}
-  {{- $repoCommand = list "sh" "-c" (printf "PASSWORD_FILE=\"%s\"\nif [ ! -f \"$PASSWORD_FILE\" ]; then\n  echo \"Redis password file $PASSWORD_FILE not found\" >&2\n  exit 1\nfi\nexport REDIS_PASSWORD=\"$(cat \"$PASSWORD_FILE\")\"\nexec \"$@\"" $passwordFile) "/usr/local/bin/argocd-repo-server" -}}
-{{- end }}
+{{- $repoCommand := required "repoServer.passwordFromFile.command must be set" .Values.repoServer.passwordFromFile.command -}}
 {{- $hasRepoCommand := gt (len $repoCommand) 0 }}
 apiVersion: apps/v1
 kind: Deployment
