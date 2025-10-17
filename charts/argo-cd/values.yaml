@@ -1043,8 +1043,7 @@ controller:
     # -- Service account name
     name: argocd-application-controller
     # -- Annotations applied to created service account
-    annotations: 
-      eks.amazonaws.com/role-arn: "arn:aws:iam::566618458053:role/wcp-services-k8s-staging-argocd"
+    annotations: {}
     # -- Labels applied to created service account
     labels: {}
     # -- Automount API credentials for the Service Account
@@ -2467,8 +2466,7 @@ server:
     # -- Server service account name
     name: argocd-server
     # -- Annotations applied to created service account
-    annotations: 
-      eks.amazonaws.com/role-arn: "arn:aws:iam::566618458053:role/wcp-services-k8s-staging-argocd"
+    annotations: {}
     # -- Labels applied to created service account
     labels: {}
     # -- Automount API credentials for the Service Account
@@ -3084,8 +3082,7 @@ repoServer:
     # -- Repo server service account name
     name: "" # "argocd-repo-server"
     # -- Annotations applied to created service account
-    annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::566618458053:role/wcp-services-k8s-staging-argocd"
+    annotations: {}
     # -- Labels applied to created service account
     labels: {}
     # -- Automount API credentials for the Service Account
