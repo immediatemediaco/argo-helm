@@ -110,6 +110,7 @@ redis:
           fi
           export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
 exec /usr/local/bin/argocd-repo-server
+```
 
 ### Admin Credentials
 
@@ -129,5 +130,4 @@ Deleting only argocd-initial-admin-secret after first login is safe; deleting da
 | argocd-server                 | ✅                                      | ✅                                   |
 | Redis (argocd-redis)          | ✅ (reads the file in its entrypoint)   | No additional command needed         |
 
-If any of the command lists or volumes are missing, expect CrashLoopBackOff or connection errors.
-```
+If any of the command lists or volumes are missing, expect CrashLoopBackOff or connection errors
