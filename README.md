@@ -35,7 +35,7 @@ redis:
   passwordFromFile:
     enabled: true
     path: /mnt/secrets/redis-password/_k8s_argocd_redis_password
-argocd-server pod
+#argocd-server pod
   server:
   volumes:
     - name: argocd-redis-password
@@ -60,7 +60,7 @@ argocd-server pod
           fi
           export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
           exec /usr/local/bin/argocd-server
-argocd-application-controller pod
+#argocd-application-controller pod
   controller:
   volumes:
     - name: argocd-redis-password
@@ -85,7 +85,7 @@ argocd-application-controller pod
           fi
           export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
           exec /usr/local/bin/argocd-application-controller
-argocd-repo-server pod
+#argocd-repo-server pod
   repoServer:
   volumes:
     - name: argocd-redis-password
@@ -124,7 +124,7 @@ Update the script to point at your actual CSI path if it differs.
 - Only the admin password hash and session signing key are stored here; Redis credentials are handled via CSI as described above.
 The API server still reads the hashed admin password and signing key from argocd-secret.
 Deleting only argocd-initial-admin-secret after first login is safe; deleting data from argocd-secret breaks the admin login.
-- Hashed admin password will be deleted once the sso has been configured for user management (the is a plan to implement this feature)
+- Hashed admin password will be deleted once the sso has been configured for user management (there is a plan to implement this feature)
 
 Quick Reference
 Pod                        Needs CSI volume                        Requires command override
