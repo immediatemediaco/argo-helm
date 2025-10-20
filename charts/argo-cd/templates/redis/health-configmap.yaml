@@ -41,6 +41,8 @@ data:
 
     if [ -n "$REDIS_PASSWORD" ]; then
       PASSWORD="$REDIS_PASSWORD"
+    elif [ -n "$REDIS_PASSWORD_FILE" ] && [ -f "$REDIS_PASSWORD_FILE" ]; then
+      PASSWORD=$(cat "$REDIS_PASSWORD_FILE")
     elif [ -f /mnt/secrets/redis-password/_k8s_argocd_redis_password ]; then
       PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password)
     else

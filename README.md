@@ -1,123 +1,161 @@
-# Argo Helm Charts
+# Purpose of This Fork
 
-[![Slack](https://img.shields.io/badge/slack-%23argo--helm--charts-brightgreen.svg?logo=slack)](https://argoproj.github.io/community/join-slack)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Chart Publish](https://github.com/argoproj/argo-helm/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/argoproj/argo-helm/actions/workflows/publish.yml)
-[![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/argo)](https://artifacthub.io/packages/search?repo=argo)
-[![CLOMonitor](https://img.shields.io/endpoint?url=https://clomonitor.io/api/projects/cncf/argo/badge)](https://clomonitor.io/projects/cncf/argo)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/argoproj/argo-helm/badge)](https://api.securityscorecards.dev/projects/github.com/argoproj/argo-helm)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/7942/badge)](https://www.bestpractices.dev/projects/7942)
+This repository is a fork of the official ArgoCD Helm chart, created with the primary goal of enabling CSI Secret Store integration **without syncing secrets to Kubernetes Secrets**.
 
-Argo Helm is a collection of **community maintained** charts for [https://argoproj.github.io](https://argoproj.github.io) projects. The charts can be added using following command:
+By default, the upstream ArgoCD Helm chart supports CSI integration but still mirrors secrets (such as Redis passwords, admin credentials, etc.) into Kubernetes Secrets for internal use.  
+For security and compliance reasons, this fork removes all Kubernetes secret generation and modifies ArgoCD configurations to consume credentials directly from mounted CSI files instead.
 
-```bash
-helm repo add argo https://argoproj.github.io/argo-helm
-```
+## Key Objectives
 
-## Version Support Policy
-As our project is maintained by a small team, we must focus our limited resources on following upstream projects and ensuring the stability of the latest version.
+- **Remove Kubernetes Secret Syncing:**  
+  Disable creation and syncing of sensitive credentials (e.g., `argocd-secret`, `argocd-redis`, `argocd-initial-admin-secret`) to Kubernetes Secrets.
 
-Consequently, **we do not provide bug fixes or security patches for older versions.** Our official support is limited to **the latest version of the upstream projects** only.
+- **Enable File-based Secret Consumption:**  
+  Modify ArgoCD Helm configurations and container startup logic to read passwords (Redis, admin, etc.) directly from files mounted by CSI drivers.
 
-We strongly encourage all users to upgrade to the latest version to benefit from the most recent features, bug fixes, and security patches.
+- **Integrate with AWS Secrets Manager via CSI:**  
+  Allow ArgoCD components (such as `argocd-server`, `argocd-repo-server`, and `argocd-redis`) to securely consume secrets from AWS Secrets Manager using the AWS Secrets Store CSI Driver.
 
-### For Users Unable to Upgrade
-> **Warning:**
-> This doesn't work all the time. We strongly recommend upgrading Helm Chart to the latest version.
+## Implementation Highlights
 
-If you are unable to upgrade to the latest version due to specific constraints, please follow the below to patch.
+- Added support for mounting secrets from CSI volumes under `/mnt/secrets-store/` paths.
+- Adjusted ArgoCD component startup commands to read Redis password and admin credentials from mounted files instead of Kubernetes secrets.
+- Removed or disabled Helm templates responsible for generating Kubernetes Secret resources.
+- Updated values and environment variable references to use file-based secret paths.
+- Compatible with AWS Secrets Manager CSI Driver and other CSI providers.
 
-1. Upgrade Helm Chart to the latest version for your minor version. e.g: If you used `v8.2.0`, update to `v8.2.6`, the latest version of `v8.2.x`.
-2. Override the image tag (`.global.image.tag`) to use a specific version.
+> **Note:**  
+> This fork is maintained internally for secure deployments of ArgoCD where Kubernetes Secrets are not permitted due to security reason.  
+> Ensure all required secrets (e.g., Redis password, admin password) are available via CSI mount, deployment will fail if CSI files are missing, as no fallback or default secret mechanism exists.  
+> This fork is not compatible with the upstream ArgoCD Helm chart; all Kubernetes secret-related functionality has been permanently removed.
 
-### How You Can Help
-This policy may evolve as our team grows. If you are interested in joining our team and helping us expand our support capabilities, we encourage you to read the [Community Membership Guide](https://github.com/argoproj/argoproj/blob/main/community/membership.md) for details.
+---
 
-## Contributing
+# Argo CD Redis Password (CSI-only) Customization
 
-We'd love to have you contribute! Please refer to our [contribution guidelines](CONTRIBUTING.md) for details.
+This fork removes all inline Redis-password handling from the upstream chart.  
+The Argo CD controller, repo-server, and api-server pods now read the password from a CSI-mounted file at runtime.
 
-### Custom resource definitions
+> **Important**  
+> These pods will crash if the CSI volume or wrapper command is missing.
 
-Some users would prefer to install the CRDs _outside_ of the chart. You can disable the CRD installation of the main four charts (argo-cd, argo-workflows, argo-events, argo-rollouts) by using `--set crds.install=false` when installing the chart.
+---
 
-Helm cannot upgrade custom resource definitions in the `<chart>/crds` folder [by design](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#some-caveats-and-explanations). Our CRDs have been moved to `<chart>/templates` to address this design decision.
+## Summary of Changes
 
-If you are using versions of a chart that have the CRDs in the root of the chart or have elected to manage the Argo CRDs outside of the chart, please use `kubectl` to upgrade CRDs manually from `templates/crds` folder or via the manifests from the upstream project repo:
+1. **Redis password**  
+   - `redis.passwordFromFile.enabled` must be `true`.  
+   - The file path (e.g. `/mnt/secrets/redis-password/_k8s_argocd_redis_password`) is injected into every pod that needs Redis.
 
-Example for Argo CD:
+2. **Explicit wrapper commands**  
+   - Each pod `argocd-application-controller`, `argocd-repo-server`, and `argocd-server` now requires a `*.passwordFromFile.command` in values.  
+   - The chart no longer generates a fallback script.
 
-```bash
-kubectl apply -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=<appVersion>"
+3. **Inline secret-init removed**  
+   - The old `redis.auth.password`/`redisSecretInit` flows no longer populate the pods.  
+   - CSI is the only supported source of the Redis password now.
 
-# Eg. version v2.4.9
-kubectl apply -k "https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.4.9"
-```
+4. **`argocd-secret` still required**  
+   - Argo CD’s core credentials (admin password hash, session signing key) are still stored in the Kubernetes Secret `argocd-secret`.  
+   - You can delete the bootstrap `argocd-initial-admin-secret` after first login if the pod is recreated, but `argocd-secret` must remain, until SSO has been configured.
 
-### Security Policy
-
-Please refer to [SECURITY.md](SECURITY.md) for details on how to report security issues.
-
-### Changelog
-
-Releases are managed independently for each helm chart, and changelogs are tracked on each release. Read more about this process [here](https://github.com/argoproj/argo-helm/blob/main/CONTRIBUTING.md#changelog).
-
-## Charts use Helm "Capabilities"
-
-Our charts make use of the Helm built-in object "Capabilities":
-> This provides information about what capabilities the Kubernetes cluster supports.  
-> *Source: https://helm.sh/docs/chart_template_guide/builtin_objects/*
-
-Today we use:
-
-- `.Capabilities.APIVersions.Has` mostly to determine whether the CRDs for ServiceMonitors (from prometheus-operator) exists inside the cluster
-- `.Capabilities.KubeVersion.Version` to handle correct apiVersion of a specific resource kind (eg. "policy/v1" vs. "policy/v1beta1")
-
-If you use the charts only to template the manifests, without installing (`helm install ..`), you need to make sure that Helm (or the Helm SDK) receives the available APIs from your Kubernetes cluster.
-
-For this you need to pass the `--api-versions` parameter to the `helm template` command:
-
-```bash
-helm template argocd \
-  oci://ghcr.io/argoproj/argo-helm/argo-cd \
-  --api-versions monitoring.coreos.com/v1 \
-  --values my-argocd-values.yaml
-```
-
-If you use other tools like [Kustomize](https://kubectl.docs.kubernetes.io/references/kustomize/builtins/) or [helmfile](https://helmfile.readthedocs.io/en/latest/#configuration) to render it, there are equivalent options.
-
-Example with Kustomize:
+## Required Helm Values
 
 ```yaml
-# kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-helmCharts:
-- name: argo-cd
-  repo: oci://ghcr.io/argoproj/argo-helm
-  version: x.y.z
-  releaseName: argocd
-  apiVersions:
-  - monitoring.coreos.com/v1
-  valuesFile: my-argocd-values.yaml
+redis:
+  passwordFromFile:
+    enabled: true
+    path: /mnt/secrets/redis-password/_k8s_argocd_redis_password
+  server:
+    volumes:
+      - name: argocd-redis-password
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: argocd-redis-password
+    volumeMounts:
+      - name: argocd-redis-password
+        mountPath: /mnt/secrets/redis-password
+        readOnly: true
+    passwordFromFile:
+      command:
+        - sh
+        - -c
+        - |
+            PASSWORD_FILE="/mnt/secrets/redis-password/_k8s_argocd_redis_password"
+            if [ ! -f "$PASSWORD_FILE" ]; then
+              echo "Redis password file $PASSWORD_FILE not found" >&2
+              exit 1
+            fi
+            export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
+            exec /usr/local/bin/argocd-server
+  controller:
+    volumes:
+      - name: argocd-redis-password
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: argocd-redis-password
+    volumeMounts:
+      - name: argocd-redis-password
+        mountPath: /mnt/secrets/redis-password
+        readOnly: true
+    passwordFromFile:
+      command:
+        - sh
+        - -c
+        - |
+            PASSWORD_FILE="/mnt/secrets/redis-password/_k8s_argocd_redis_password"
+            if [ ! -f "$PASSWORD_FILE" ]; then
+              echo "Redis password file $PASSWORD_FILE not found" >&2
+              exit 1
+            fi
+            export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
+            exec /usr/local/bin/argocd-application-controller
+  repoServer:
+    volumes:
+      - name: argocd-redis-password
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: argocd-redis-password
+    volumeMounts:
+      - name: argocd-redis-password
+        mountPath: /mnt/secrets/redis-password
+        readOnly: true
+    passwordFromFile:
+      command:
+        - sh
+        - -c
+        - |
+            PASSWORD_FILE="/mnt/secrets/redis-password/_k8s_argocd_redis_password"
+            if [ ! -f "$PASSWORD_FILE" ]; then
+              echo "Redis password file $PASSWORD_FILE not found" >&2
+              exit 1
+            fi
+            export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
+            exec /usr/local/bin/argocd-repo-server
 ```
 
-Example with helmfile:
+### Admin Credentials
 
-```yaml
-# helmfile.yaml
-repositories:
-  - name: argo
-    url: https://argoproj.github.io/argo-helm
+- The API server reads the hashed admin password and signing key from the `argocd-secret` Kubernetes Secret.
+- You may safely delete the bootstrap `argocd-initial-admin-secret` after your first login.
+- **Do not delete or modify `argocd-secret`** removing its data will break admin login and core Argo CD functionality.
+- Only the admin password hash and session signing key are stored here; Redis credentials are handled via CSI as described above.
+- Hashed admin password will be deleted once SSO has been configured for user management (planned feature).
 
-apiVersions:
-  - monitoring.coreos.com/v1
+### Quick Reference
 
-releases:
-  - name: argocd
-    namespace: argocd
-    chart: argo/argo-cd
-    values:
-      - my-argocd-values.yaml
-```
+| Pod                           | Needs CSI volume                        | Requires command override           |
+|-------------------------------|-----------------------------------------|-------------------------------------|
+| argocd-application-controller | ✅                                      | ✅                                   |
+| argocd-repo-server            | ✅                                      | ✅                                   |
+| argocd-server                 | ✅                                      | ✅                                   |
+| Redis (argocd-redis)          | ✅ (reads the file in its entrypoint)   | No additional command needed         |
+
+If any of the command lists or volumes are missing, expect CrashLoopBackOff or connection errors.
+

@@ -886,6 +886,13 @@ controller:
   # -- Additional command line arguments to pass to application controller
   extraArgs: []
 
+  # -- Override the container command for the application controller
+  command: []
+
+  passwordFromFile:
+    # -- Command to overide entripoint and pass redies password via file
+    command: []
+
   # -- Environment variables to pass to application controller
   env: []
 
@@ -1572,6 +1579,12 @@ redis:
   # @default -- `[]` (defaults to global.imagePullSecrets)
   imagePullSecrets: []
 
+  passwordFromFile:
+    # -- Require the Redis password to be read from a file (for example, mounted via CSI)
+    enabled: true
+    # -- Absolute path to the file that contains the Redis password
+    path: /mnt/secrets/redis-password/_k8s_argocd_redis_password
+
   # -- Additional command line arguments to pass to redis-server
   extraArgs: []
   # - --bind
@@ -2057,23 +2070,15 @@ server:
   # @default -- `[]` (defaults to global.imagePullSecrets)
   imagePullSecrets: []
 
-  command:
-    - /bin/sh
-  args:
-    - -c
-    - |
-
-        if [ -n "$REDIS_PASSWORD" ]; then
-          unset REDIS_PASSWORD;
-        else
-          REDIS_PASSWORD=$(cat /mnt/secrets/redis-password/_k8s_argocd_redis_password | tr -d '\n')
-        fi
-
-        export REDIS_PASSWORD
-        exec /usr/local/bin/argocd-server --port=8080 --metrics-port=8083;
-
   # -- Additional command line arguments to pass to Argo CD server
   extraArgs: []
+
+  # -- Override the container command for the Argo CD server
+  command: []
+
+  passwordFromFile:
+    # -- Command to overide entripoint and pass redies password via file
+    command: []
 
   # -- Environment variables to pass to Argo CD server
   env: []
@@ -2755,6 +2760,13 @@ repoServer:
   # -- Additional command line arguments to pass to repo server
   extraArgs: []
 
+  # -- Override the container command for the repo server
+  command: []
+
+  passwordFromFile:
+    # -- Command to overide entripoint and pass redies password via file
+    command: []
+
   # -- Environment variables to pass to repo server
   env: []
 
@@ -3068,7 +3080,7 @@ repoServer:
     # -- Create repo server service account
     create: true
     # -- Repo server service account name
-    name: "" # "argocd-repo-server"
+    name: "argocd-repo-server"
     # -- Annotations applied to created service account
     annotations: {}
     # -- Labels applied to created service account
