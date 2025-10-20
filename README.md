@@ -109,12 +109,7 @@ redis:
             exit 1
           fi
           export REDIS_PASSWORD="$(cat "$PASSWORD_FILE")"
-          exec /usr/local/bin/argocd-repo-server
-
-Notes:
-
-The command must end with exec /usr/local/bin/... so the chart’s native CLI flags (--port, --metrics-port, etc.) still reach the binary.
-Update the script to point at your actual CSI path if it differs.
+exec /usr/local/bin/argocd-repo-server
 
 ### Admin Credentials
 
@@ -122,15 +117,17 @@ Update the script to point at your actual CSI path if it differs.
 - You may safely delete the bootstrap `argocd-initial-admin-secret` after your first login.
 - **Do not delete or modify `argocd-secret`**—removing its data will break admin login and core Argo CD functionality.
 - Only the admin password hash and session signing key are stored here; Redis credentials are handled via CSI as described above.
-The API server still reads the hashed admin password and signing key from argocd-secret.
 Deleting only argocd-initial-admin-secret after first login is safe; deleting data from argocd-secret breaks the admin login.
 - Hashed admin password will be deleted once the sso has been configured for user management (there is a plan to implement this feature)
 
-Quick Reference
-Pod                        Needs CSI volume                        Requires command override
-argocd-application-controller    ✅                                ✅
-argocd-repo-server               ✅                                ✅
-argocd-server                    ✅                                ✅
-Redis (argocd-redis)             ✅ (reads the file in its entrypoint)    No additional command needed
-If any of the command lists or volumes are missing, expect CrashLoopBackOff or connection errors.
+### Quick Reference
 
+| Pod                         | Needs CSI volume                        | Requires command override           |
+|-----------------------------|-----------------------------------------|-------------------------------------|
+| argocd-application-controller | ✅                                      | ✅                                   |
+| argocd-repo-server            | ✅                                      | ✅                                   |
+| argocd-server                 | ✅                                      | ✅                                   |
+| Redis (argocd-redis)          | ✅ (reads the file in its entrypoint)   | No additional command needed         |
+
+If any of the command lists or volumes are missing, expect CrashLoopBackOff or connection errors.
+```
