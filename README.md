@@ -25,9 +25,9 @@ For security and compliance reasons, this fork removes all Kubernetes secret gen
 - Compatible with AWS Secrets Manager CSI Driver and other CSI providers.
 
 > **Note:**  
-> This fork is maintained internally for secure deployments of ArgoCD where Kubernetes Secrets are not permitted due to organizational or compliance policies.  
-> Ensure that the corresponding AWS Secrets Manager entries and CSI volume mounts are correctly configured before deployment.  
-> The chart behavior otherwise remains aligned with the official upstream ArgoCD Helm chart.
+> This fork is maintained internally for secure deployments of ArgoCD where Kubernetes Secrets are not permitted due to security reason.  
+> Ensure all required secrets (e.g., Redis password, admin password) are available via CSI mount, deployment will fail if CSI files are missing, as no fallback or default secret mechanism exists.  
+> This fork is not compatible with the upstream ArgoCD Helm chart; all Kubernetes secret-related functionality has been permanently removed.
 
 ---
 
@@ -48,7 +48,7 @@ The Argo CD controller, repo-server, and api-server pods now read the password f
    - The file path (e.g. `/mnt/secrets/redis-password/_k8s_argocd_redis_password`) is injected into every pod that needs Redis.
 
 2. **Explicit wrapper commands**  
-   - Each pod—`argocd-application-controller`, `argocd-repo-server`, and `argocd-server`—now requires a `*.passwordFromFile.command` in values.  
+   - Each pod `argocd-application-controller`, `argocd-repo-server`, and `argocd-server` now requires a `*.passwordFromFile.command` in values.  
    - The chart no longer generates a fallback script.
 
 3. **Inline secret-init removed**  
@@ -144,7 +144,7 @@ redis:
 
 - The API server reads the hashed admin password and signing key from the `argocd-secret` Kubernetes Secret.
 - You may safely delete the bootstrap `argocd-initial-admin-secret` after your first login.
-- **Do not delete or modify `argocd-secret`**—removing its data will break admin login and core Argo CD functionality.
+- **Do not delete or modify `argocd-secret`** removing its data will break admin login and core Argo CD functionality.
 - Only the admin password hash and session signing key are stored here; Redis credentials are handled via CSI as described above.
 - Hashed admin password will be deleted once SSO has been configured for user management (planned feature).
 
